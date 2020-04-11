@@ -1,0 +1,84 @@
+package com.tawana.controller;
+
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.tawana.exception.CustomException;
+import com.tawana.model.authentication.AuthRequest;
+import com.tawana.model.authentication.ChangePassword;
+import com.tawana.model.authentication.ForgotPassword;
+import com.tawana.model.authentication.ProfileUpdate;
+import com.tawana.model.authentication.User;
+import com.tawana.service.UserService;
+
+@RestController
+@CrossOrigin
+@RequestMapping("/users")
+public class AuthenticationController {
+	
+	private final Logger log = LoggerFactory.getLogger(AuthenticationController.class);
+
+	@Autowired
+	private UserService userService;
+
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@Valid @RequestBody AuthRequest loginUser) {
+		return userService.login(loginUser);
+	}
+
+	@PostMapping("/register")
+	public ResponseEntity<?> register(@Valid @RequestBody User user) {
+		log.info("User register:"+user);
+		return userService.createUser(user);
+	}
+
+	@PostMapping("/forgot_password")
+	public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPassword forgotPassword) {
+		return userService.forgotPassword(forgotPassword);
+	}
+
+	
+	@PostMapping("/change_password")
+	public ResponseEntity<?> chOangePassword(@Valid @RequestBody ChangePassword changePassword) {
+		return userService.changePassword(changePassword);
+	}
+	
+	 @PostMapping("/profile_update")
+	 public ResponseEntity<?> profileUpdates(@Valid @RequestBody ProfileUpdate profile_update){	    		
+           return userService.profileUpdate(profile_update);
+	    }
+
+
+    @PostMapping("/profile_image_update")
+    public ResponseEntity<?> profileImageUpdate( @RequestParam("user_avatar") MultipartFile user_avatar){
+    	log.info("User user_avatar:"+user_avatar);
+    	try {
+             return userService.profileImageUpdate(user_avatar);
+    	}catch(Exception e) {
+    		log.info("ProfileImageUpdate  user_avatar: "+e.getMessage());
+    		e.getMessage();
+    		 throw new CustomException("Failed to update empty file");
+    	}
+    }
+    
+    @GetMapping("/image-profile/{path}")
+    @ResponseBody
+    public ResponseEntity<?> getPhoto(@PathVariable("path") String path) {
+        return userService.getPhoto(path);
+    }	
+
+}
