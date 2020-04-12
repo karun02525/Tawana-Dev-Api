@@ -26,6 +26,15 @@ public interface UserService {
 
     ResponseEntity<?> getPhoto(String path);
     
+    ResponseEntity<?> venderVerify();
+    
+    ResponseEntity<?> venderRegister(String category_id,String category_name);
+    
+    ResponseEntity<?> notification();
+    
+    
+    
+    
     
     
     

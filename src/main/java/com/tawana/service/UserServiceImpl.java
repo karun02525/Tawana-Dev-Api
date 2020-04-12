@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -25,15 +26,18 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.tawana.exception.CustomException;
+import com.tawana.model.NotificationModel;
 import com.tawana.model.authentication.AuthRequest;
 import com.tawana.model.authentication.ChangePassword;
 import com.tawana.model.authentication.ForgotPassword;
 import com.tawana.model.authentication.ProfileUpdate;
 import com.tawana.model.authentication.User;
+import com.tawana.model.authentication.VenderVerifyModel;
+import com.tawana.model.common.ResponseArrayModel;
 import com.tawana.model.common.ResponseModel;
 import com.tawana.model.common.ResponseObjectModel;
 import com.tawana.security.JwtTokenProvider;
@@ -206,4 +210,73 @@ public class UserServiceImpl implements UserService {
 	        }
 	    }
 
+	 
+	 @Override
+		public ResponseEntity<?> venderVerify() {
+			String uid = SecurityContextHolder.getContext().getAuthentication().getName();
+			User model = mongoTemplate.findOne(new Query(Criteria.where("uid").is(uid.trim())), User.class);
+		        if (model == null) {
+		            return new ResponseEntity<>(new ResponseModel(false, "User id invalid! please try again"), HttpStatus.BAD_REQUEST);
+		        } else {
+		            	
+	        	VenderVerifyModel result = mongoTemplate.findOne(new Query(Criteria.where("uid").is(uid.trim())), VenderVerifyModel.class);
+		             if (result == null) {
+		            	 Map<String,Integer> map =new HashMap<>();
+		            	 map.put("is_verify", 0);
+		                 return new ResponseEntity<>(new ResponseObjectModel(true, "First time create",map), HttpStatus.OK);
+		             } else {
+		            	 String message="";
+	                    	 if(result.getIs_verify()==1) {
+		            		     message="Your Verification Pending";
+	            	        }
+			                 if(result.getIs_verify()==3) {
+		                	      message="Your Shop has been rejected";
+			            	 }
+		                     return new ResponseEntity<>(new ResponseObjectModel(true,message,result), HttpStatus.OK);                 
+		           }
+		        }
+	       
+		} 
+	 
+	 
+	@Transactional 
+	@Override
+	public ResponseEntity<?> venderRegister(String category_id,String category_name) {
+		String uid = SecurityContextHolder.getContext().getAuthentication().getName();
+		User model = mongoTemplate.findOne(new Query(Criteria.where("uid").is(uid.trim())), User.class);
+	        if (model == null) {
+	            return new ResponseEntity<>(new ResponseModel(false, "User id invalid! please try again"), HttpStatus.BAD_REQUEST);
+	        } else {
+	        	VenderVerifyModel verify=new VenderVerifyModel();
+	        	verify.setUid(uid);
+	        	verify.setName(model.getName());
+	        	verify.setMobile(model.getMobile());
+	        	verify.setCategory_id(category_id.trim());
+	        	verify.setCategory_name(category_name);
+	        	verify.setIs_verify(1);//Pending verification (1) means
+	        	mongoTemplate.save(verify);  
+	        		
+	        	NotificationModel noti=new NotificationModel();
+	        	noti.setUid(uid);
+	        	noti.setVender_id(verify.getVender_id());
+	        	noti.setCategory(category_name);
+	        	noti.setTitle("Pending");
+	        	noti.setType("Vender Register for Shop");
+	        	noti.setMessage("Your verification pending.");
+	        	mongoTemplate.save(noti);
+                return new ResponseEntity<>(new ResponseObjectModel(true, "Your verification pending", verify), HttpStatus.OK);
+	        }
+	}
+
+	@Override
+	public ResponseEntity<?> notification() {
+		String uid = SecurityContextHolder.getContext().getAuthentication().getName();
+		List<NotificationModel> mess = mongoTemplate.find(new Query(Criteria.where("uid").is(uid.trim())), NotificationModel.class);
+	        if (mess.isEmpty()) {
+	            return new ResponseEntity<>(new ResponseModel(false, "No data available"), HttpStatus.BAD_REQUEST);
+	        } else {
+                return new ResponseEntity<>(new ResponseArrayModel(true, "All Notifications", mess), HttpStatus.OK);
+	        }
+	}
 }
+

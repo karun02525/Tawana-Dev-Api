@@ -27,7 +27,7 @@ import com.tawana.service.UserService;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/users")
+@RequestMapping("/authenticate")
 public class AuthenticationController {
 	
 	private final Logger log = LoggerFactory.getLogger(AuthenticationController.class);
@@ -41,7 +41,7 @@ public class AuthenticationController {
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<?> register(@Valid @RequestBody User user) {
+	public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
 		log.info("User register:"+user);
 		return userService.createUser(user);
 	}
@@ -79,6 +79,24 @@ public class AuthenticationController {
     @ResponseBody
     public ResponseEntity<?> getPhoto(@PathVariable("path") String path) {
         return userService.getPhoto(path);
-    }	
+    }
+    
+    
+    @GetMapping("/vender_verify")
+    public ResponseEntity<?> venderVerify() {
+        return userService.venderVerify();
+    }
+
+    
+    @GetMapping("/vender_register/{category_id}/{category_name}")
+    public ResponseEntity<?> venderSubmitVerify(@PathVariable("category_id") String category_id,@PathVariable("category_name")String category_name) {
+        return userService.venderRegister(category_id,category_name);
+    }
+    
+    
+    @GetMapping("/notifications")
+    public ResponseEntity<?> notification() {
+        return userService.notification();
+    }
 
 }

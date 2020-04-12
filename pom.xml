@@ -75,6 +75,14 @@
 			<artifactId>json</artifactId>
 			<version>20090211</version>
 		</dependency>
+		
+		<!-- Random number otp -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    </dependency>
+        
+		
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
